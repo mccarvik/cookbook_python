@@ -23,6 +23,7 @@ print(s.format_map(vars(a)))
 
 # Can avoid this with a __missing__ method
 class safesub(dict):
+    # __missing__ method can be defined to handle when missing values in mapping / dict classes
     def __missing__(self, key):
         return '{' + key + '}'
 
@@ -32,6 +33,8 @@ print(s.format_map(safesub(vars())))
 
 # Hide variable substitution
 def sub(text):
+    # _getframe --> returns the stack frame of the caller
+    # f_loacls --> access to the local varibales of the frame
     return text.format_map(safesub(sys._getframe(1).f_locals))
 
 # And then use it thru out your script
