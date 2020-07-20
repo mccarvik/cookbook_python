@@ -32,6 +32,7 @@ class OrderedMeta(type):
         d['_order'] = order
         return type.__new__(cls, clsname, bases, d)
  
+    # invoked immediately at the start of the class definition
     @classmethod
     def __prepare__(cls, clsname, bases):
         return OrderedDict()
@@ -50,13 +51,12 @@ class Stock(Structure):
         self.shares = shares
         self.price = price
 
-import pdb; pdb.set_trace()
 s = Stock('GOOG',100,490.1)
-s.name
+print(s.name)
 s.as_csv()
-t = Stock('AAPL','a lot', 610.23)
-from collections import OrderedDict
+# t = Stock('AAPL','a lot', 610.23) #error, shares needs to be a number
 
+# Example of a solution that rejects duplicate definitions
 class NoDupOrderedDict(OrderedDict):
     def __init__(self, clsname):
         self.clsname = clsname
@@ -65,7 +65,8 @@ class NoDupOrderedDict(OrderedDict):
     def __setitem__(self, name, value):
         if name in self:
             raise TypeError('{} already defined in {}'.format(name, self.clsname))
-            super().__setitem__(name, value)
+        super().__setitem__(name, value)
+
 
 class OrderedMeta(type):
     def __new__(cls, clsname, bases, clsdict):
@@ -77,13 +78,15 @@ class OrderedMeta(type):
     def __prepare__(cls, clsname, bases):
         return NoDupOrderedDict(clsname)
 
+# Will cause an error as spam is defined twice
 class A(metaclass=OrderedMeta):
     def spam(self):
         pass
     def spam(self):
-        pass
+        pass 
 
-class Stock(Model):
-    name = String()
-    shares = Integer()
-    price = Float()
+# example of class definitions
+# class Stock(Model):
+#     name = String()
+#     shares = Integer()
+#     price = Float()
