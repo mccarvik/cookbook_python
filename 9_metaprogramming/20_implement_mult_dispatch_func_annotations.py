@@ -1,4 +1,7 @@
+import sys
+
 class Spam:
+    # allows us to annote arguments
     def bar(self, x:int, y:int):
         print('Bar 1:', x, y)
     def bar(self, s:str, n:int = 0):
@@ -7,10 +10,14 @@ class Spam:
 s = Spam()
 s.bar(2, 3) # Prints Bar 1: 2 3
 s.bar('hello') # Prints Bar 2: hello 0
+s.bar('a','b') # still works even tho types dont match
 
+# solutoion that does the above using metaclasses and descriptors
+# basically method overloading
 # multiple.py
 import inspect
 import types
+
 class MultiMethod:
     '''
     Represents a single multimethod.
@@ -30,10 +37,12 @@ class MultiMethod:
             if name == 'self':
                 continue
             if parm.annotation is inspect.Parameter.empty:
+                # forces us to annotate
                 raise TypeError(
                     'Argument {} must be annotated with a type'.format(name)
                 )
             if not isinstance(parm.annotation, type):
+                # forces the type
                 raise TypeError(
                         'Argument {} annotation must be a type'.format(name)
                         )
@@ -94,11 +103,14 @@ class MultipleMeta(type):
     def __prepare__(cls, clsname, bases):
         return MultiDict()
 
+
+# to use the above class...
 class Spam(metaclass=MultipleMeta):
     def bar(self, x:int, y:int):
         print('Bar 1:', x, y)
     def bar(self, s:str, n:int = 0):
         print('Bar 2:', s, n)
+
 
 # Example: overloaded __init__
 import time
@@ -116,19 +128,27 @@ s = Spam()
 s.bar(2, 3)
 s.bar('hello')
 s.bar('hello', 5)
-s.bar(2,'hello')
+# s.bar(2,'hello') # error, no matching method types
 # Overloaded __init__
 d = Date(2012, 12, 21)
 # Get today's date
 e = Date()
-e.year
-e.month
-e.day
+print(e.year)
+print(e.month)
+print(e.day)
+
 b = s.bar
-b
-b.__self__
+# bound method
+print(b)
+# main method
+print(b.__self__)
 b(2, 3)
 b('hello')
+
+# doesnt work for keywords
+# s.bar(x=2,y=3)
+
+# inheritance also doesnt work as shown below
 class A:
     pass
 
@@ -144,11 +164,18 @@ class Spam(metaclass=MultipleMeta):
  
     def foo(self, x:C):
         print('Foo 2:', x)
+
+# fails as x:A fails to match any instances in the subclasses
 s = Spam()
 a = A()
-s.foo(a)
-import types
-In []
+print(s.foo(a))
+c = C()
+s.foo(c)
+b = B()
+s.foo(b) # error, cant match subclass
+
+
+# similar implementation using decorators
 class multimethod:
     def __init__(self, func):
         self._methods = {}
@@ -177,7 +204,7 @@ class multimethod:
         else:
             return self
 
-
+# to use decorator version
 class Spam:
     @multimethod
     def bar(self, *args):
