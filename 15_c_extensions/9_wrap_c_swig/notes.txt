@@ -1,0 +1,2 @@
+swig -python -py3 sample.i
+python setup.py build_ext --inplace
